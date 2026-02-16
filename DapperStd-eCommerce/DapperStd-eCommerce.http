@@ -1,0 +1,6 @@
+@DapperStd_eCommerce_HostAddress = http://localhost:5266
+
+GET {{DapperStd_eCommerce_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
