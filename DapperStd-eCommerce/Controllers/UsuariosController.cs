@@ -1,6 +1,5 @@
 ﻿using DapperStd_eCommerce.Models;
 using DapperStd_eCommerce.Repositories;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DapperStd_eCommerce.Controllers
@@ -24,7 +23,7 @@ namespace DapperStd_eCommerce.Controllers
         }
 
         [HttpGet("{id}")]
-        public IActionResult Get(int id) 
+        public IActionResult Get(Guid id) 
         {
             Usuario usr = _usuarioRepository.Get(id);
             if(usr == null) { return NotFound(); }
@@ -47,7 +46,7 @@ namespace DapperStd_eCommerce.Controllers
         }
 
         [HttpDelete]
-        public IActionResult Delete(int id)
+        public IActionResult Delete(Guid id)
         {
             Usuario usr = _usuarioRepository.Get(id);
             if(usr == null) { return NotFound(); }

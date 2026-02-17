@@ -1,52 +1,81 @@
 ﻿using DapperStd_eCommerce.Models;
+using Microsoft.Data.SqlClient;
+using System.Data;
+using Dapper;
 
 namespace DapperStd_eCommerce.Repositories
 {
     public class UsuarioRepository : IUsuarioRepository
     {
-        private List<Usuario> _db = new List<Usuario>()
+        private IDbConnection _connection;
+        public UsuarioRepository()
         {
-            new Usuario(){ Id = 1, Nome = "Testinho", Email = "testinho@gmail.com" },
-            new Usuario(){ Id = 2, Nome = "Testinho2", Email = "testinho2@gmail.com" },
-            new Usuario(){ Id = 3, Nome = "Testinho3", Email = "testinho3@gmail.com" },
-            new Usuario(){ Id = 4, Nome = "Testinho4", Email = "testinho4@gmail.com" },
-        };
+            _connection = new SqlConnection("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=dapperStd-Commerce;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;Application Intent=ReadWrite;Multi Subnet Failover=False");
+        }
 
-        public void Delete(int id)
+        public void Delete(Guid id)
         {
-           Usuario usr = _db.FirstOrDefault(x => x.Id == id);
-           _db.Remove(usr);
+            _connection.Execute("DELETE FROM dbo.Usuarios WHERE Id = @Id", new { Id = id });
         }
 
         public List<Usuario> Get()
         {
-            return _db.ToList();
+            return _connection.Query<Usuario>("SELECT * FROM dbo.Usuarios").ToList();
         }
 
-        public Usuario Get(int id)
+        public Usuario Get(Guid id)
         {
-            return _db.FirstOrDefault(u => u.Id == id);
+            return _connection.QueryFirstOrDefault<Usuario>("SELECT * FROM dbo.Usuarios WHERE Id = @Id", new { Id = id });
         }
 
         public void Insert(Usuario usuario)
         {
-            Usuario lastUser = _db.LastOrDefault();
+            var sql = @"
+                    INSERT INTO dbo.Usuarios
+                    (
+                        Nome,
+                        Email,
+                        Sexo,
+                        RG,
+                        CPF,
+                        NomeMae,
+                        SituacaoCadastro
+                    )
+                    VALUES
+                    (
+                        @Nome,
+                        @Email,
+                        @Sexo,
+                        @RG,
+                        @CPF,
+                        @NomeMae,
+                        @SituacaoCadastro
+                    )";
 
-            if (lastUser == null)
-            {
-                usuario.Id = 1;
-            }else
-            {
-                usuario.Id = lastUser.Id;
-                usuario.Id++;
-            }
-            _db.Add(usuario);
+             _connection.Execute(sql, usuario);
         }
 
         public void Update(Usuario usuario)
         {
-            _db.Remove(usuario);
-            _db.Add(usuario);
+            var sql = @"
+            UPDATE dbo.Usuarios
+            SET Nome = @Nome,
+                Email = @Email,
+                RG = @RG,
+                CPF = @CPF,
+                NomeMae = @NomeMae
+            WHERE Id = @Id                                            
+            ";
+
+            _connection.Execute(sql, new
+            {
+                Nome = usuario.Nome,
+                Email = usuario.Email,
+                RG = usuario.RG,
+                CPF = usuario.CPF,
+                NomeMae = usuario.NomeMae,
+                Id = usuario.Id
+            });
         }
     }
 }
