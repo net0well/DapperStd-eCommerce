@@ -1,4 +1,5 @@
-﻿using DapperStd_eCommerce.Models;
+﻿using DapperStd_eCommerce.Data;
+using DapperStd_eCommerce.Models;
 using DapperStd_eCommerce.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,8 +10,10 @@ namespace DapperStd_eCommerce.Controllers
     public class UsuariosController : ControllerBase
     {
         private IUsuarioRepository _usuarioRepository;
-        public UsuariosController(IUsuarioRepository usuarioRepository)
+        private IUnitOfWork _unitOfWork;
+        public UsuariosController(IUsuarioRepository usuarioRepository, IUnitOfWork unitOfWork)
         {
+            _unitOfWork = unitOfWork;
             _usuarioRepository = usuarioRepository;
         }
 
@@ -33,25 +36,55 @@ namespace DapperStd_eCommerce.Controllers
         [HttpPut]
         public IActionResult Update([FromBody] Usuario usuario) 
         {
-            _usuarioRepository.Update(usuario);
-
-            return Ok();
+            _unitOfWork.BeginTransaction();
+            try
+            {
+                _usuarioRepository.Update(usuario);
+                _unitOfWork.Commit();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                return StatusCode(500, "Erro ao atualizar o usuário");
+            }
         }
 
         [HttpPost]
         public IActionResult Insert([FromBody] Usuario usuario)
         {
-            _usuarioRepository.Insert(usuario);
-            return Ok(usuario);
+            _unitOfWork.BeginTransaction();
+            try
+            {
+                _usuarioRepository.Insert(usuario);
+                _unitOfWork.Commit();
+                return Ok(usuario);
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                return StatusCode(500, "Erro ao inserir o usuário: " + ex.Message);
+            }
         }
 
         [HttpDelete]
         public IActionResult Delete(Guid id)
         {
-            Usuario usr = _usuarioRepository.Get(id);
-            if(usr == null) { return NotFound(); }
-            _usuarioRepository.Delete(usr.Id);
-            return NoContent();
+            var usr = _usuarioRepository.Get(id);
+            if (usr == null) { return NotFound(); }
+
+            _unitOfWork.BeginTransaction();
+            try
+            {
+                _usuarioRepository.Delete(usr.Id);
+                _unitOfWork.Commit();
+                return NoContent();
+            }
+            catch
+            {
+                _unitOfWork.Rollback();
+                return StatusCode(500, "Erro ao deletar o usuário");
+            }
         }
     }
 }

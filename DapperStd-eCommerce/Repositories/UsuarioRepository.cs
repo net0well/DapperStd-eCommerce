@@ -47,12 +47,11 @@ namespace DapperStd_eCommerce.Repositories
                     return usuario;
                 },
                 new { Id = id }, _session.Transaction).FirstOrDefault();
-
         }
 
         public void Insert(Usuario usuario)
         {
-            var sql = @"
+            var sqluUsuario = @"
                     INSERT INTO dbo.Usuarios
                     (
                         Nome,
@@ -61,8 +60,10 @@ namespace DapperStd_eCommerce.Repositories
                         RG,
                         CPF,
                         NomeMae,
-                        SituacaoCadastro
+                        SituacaoCadastro,
+                        DataCadastro
                     )
+                    OUTPUT inserted.ID
                     VALUES
                     (
                         @Nome,
@@ -71,10 +72,34 @@ namespace DapperStd_eCommerce.Repositories
                         @RG,
                         @CPF,
                         @NomeMae,
-                        @SituacaoCadastro
+                        @SituacaoCadastro,
+                        @DataCadastro
                     )";
 
-            _session.Connection.Execute(sql, usuario, _session.Transaction);
+            usuario.Id = _session.Connection.Query<Guid>(sqluUsuario, usuario, _session.Transaction).Single();
+
+            if (usuario.Contato != null)
+            {
+                var sqlContatos = @"
+                    INSERT INTO dbo.Contatos
+                    (
+                        UsuarioId,
+                        Telefone,
+                        Celular
+                    )
+                    OUTPUT inserted.ID
+                    VALUES
+                    (
+                        @UsuarioId,
+                        @Telefone,
+                        @Celular
+                    )";
+
+                usuario.Contato.UsuarioId = usuario.Id;
+
+                usuario.Contato.Id = _session.Connection.Query<Guid>(sqlContatos, usuario.Contato, _session.Transaction).Single();
+            }
+           
         }
 
         public void Update(Usuario usuario)
