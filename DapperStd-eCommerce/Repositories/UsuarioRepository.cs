@@ -2,30 +2,36 @@
 using Microsoft.Data.SqlClient;
 using System.Data;
 using Dapper;
+using DapperStd_eCommerce.Data;
 
 namespace DapperStd_eCommerce.Repositories
 {
     public class UsuarioRepository : IUsuarioRepository
     {
-        private IDbConnection _connection;
-        public UsuarioRepository()
+        //private IDbConnection _connection;
+        private readonly IDapperFactory _dapper;
+        public UsuarioRepository(IDapperFactory dapper)
         {
-            _connection = new SqlConnection("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=dapperStd-Commerce;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;Application Intent=ReadWrite;Multi Subnet Failover=False");
+            _dapper = dapper;
+            //_connection = new SqlConnection("Server=localhost,1433;Database=dapperStd-Commerce;User Id=sa;Password=Str0ngP@ssword!;TrustServerCertificate=True;Encrypt=False;");
         }
 
         public void Delete(Guid id)
         {
-            _connection.Execute("DELETE FROM dbo.Usuarios WHERE Id = @Id", new { Id = id });
+            using var connection = _dapper.CreateConnection();
+            connection.Execute("DELETE FROM dbo.Usuarios WHERE Id = @Id", new { Id = id });
         }
 
         public List<Usuario> Get()
         {
-            return _connection.Query<Usuario>("SELECT * FROM dbo.Usuarios").ToList();
+            using var connection = _dapper.CreateConnection();
+            return connection.Query<Usuario>("SELECT * FROM dbo.Usuarios").ToList();
         }
 
         public Usuario Get(Guid id)
         {
-            return _connection.QueryFirstOrDefault<Usuario>("SELECT * FROM dbo.Usuarios WHERE Id = @Id", new { Id = id });
+            using var connection = _dapper.CreateConnection();
+            return connection.QueryFirstOrDefault<Usuario>("SELECT * FROM dbo.Usuarios WHERE Id = @Id", new { Id = id });
         }
 
         public void Insert(Usuario usuario)
@@ -52,7 +58,8 @@ namespace DapperStd_eCommerce.Repositories
                         @SituacaoCadastro
                     )";
 
-             _connection.Execute(sql, usuario);
+            using var connection = _dapper.CreateConnection();
+            connection.Execute(sql, usuario);
         }
 
         public void Update(Usuario usuario)
@@ -67,7 +74,8 @@ namespace DapperStd_eCommerce.Repositories
             WHERE Id = @Id                                            
             ";
 
-            _connection.Execute(sql, new
+            using var connection = _dapper.CreateConnection();
+            connection.Execute(sql, new
             {
                 Nome = usuario.Nome,
                 Email = usuario.Email,
