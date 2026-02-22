@@ -22,12 +22,32 @@ namespace DapperStd_eCommerce.Repositories
 
         public List<Usuario> Get()
         {
-            return _session.Connection.Query<Usuario>("SELECT * FROM dbo.Usuarios", null, _session.Transaction).ToList();
+            return _session.Connection.Query<Usuario, Contato, Usuario>(
+                @"SELECT * 
+                  FROM Usuarios 
+                  LEFT JOIN Contatos ON Contatos.UsuarioId = Usuarios.Id",
+                (usuario, contato) =>
+                {
+                    usuario.Contato = contato;
+                    return usuario;
+                },
+                _session.Transaction).ToList();
         }
 
         public Usuario? Get(Guid id)
         {
-            return _session.Connection.QueryFirstOrDefault<Usuario>("SELECT * FROM dbo.Usuarios WHERE Id = @Id", new { Id = id }, _session.Transaction);
+            return _session.Connection.Query<Usuario, Contato, Usuario>(
+                @"SELECT * 
+                  FROM Usuarios 
+                  LEFT JOIN Contatos ON Contatos.UsuarioId = Usuarios.Id
+                  WHERE Usuarios.Id = @Id", 
+                (usuario, contato) =>
+                {
+                    usuario.Contato = contato;
+                    return usuario;
+                },
+                new { Id = id }, _session.Transaction).FirstOrDefault();
+
         }
 
         public void Insert(Usuario usuario)
