@@ -1,4 +1,7 @@
-﻿namespace DapperStd_eCommerce.Models
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.Text.Json.Serialization;
+
+namespace DapperStd_eCommerce.Models
 {
     public class Contato
     {
@@ -7,6 +10,8 @@
         public string Telefone { get; set; }
         public string Celular { get; set; }
 
+        [JsonIgnore] 
+        [ValidateNever]
         public Usuario Usuario { get; set; }
     }
 }
