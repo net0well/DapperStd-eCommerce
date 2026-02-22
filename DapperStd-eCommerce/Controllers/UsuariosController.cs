@@ -41,7 +41,7 @@ namespace DapperStd_eCommerce.Controllers
             {
                 _usuarioRepository.Update(usuario);
                 _unitOfWork.Commit();
-                return Ok();
+                return Ok(usuario);
             }
             catch (Exception ex)
             {
